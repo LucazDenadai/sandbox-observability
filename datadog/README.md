@@ -14,7 +14,7 @@ datadog/
 ## Como rodar
 
 1. Crie uma conta trial em https://www.datadoghq.com/ e gere uma API Key em *Organization Settings > API Keys*.
-2. Copie `.env.example` para `.env` e preencha `DD_API_KEY`.
+2. Copie `.env.example` para `.env` e preencha `DD_API_KEY` e `DD_SITE` (ex: `us5.datadoghq.com`).
 3. Suba os containers:
 
 ```bash
@@ -32,9 +32,11 @@ docker compose up --build
 
 Usamos **auto-instrumentação** via [.NET Tracer do Datadog](https://docs.datadoghq.com/tracing/trace_collection/dd_libraries/dotnet-core/), sem alterar código da aplicação:
 
-- O Dockerfile instala o pacote `datadog-dotnet-apm`, que expõe um CLR Profiler nativo.
-- Variáveis de ambiente no `docker-compose.yml` (`CORECLR_ENABLE_PROFILING`, `CORECLR_PROFILER`, etc.) ativam o profiler, que injeta o tracing automaticamente em ASP.NET Core, HttpClient, etc.
-- O Datadog Agent recebe os traces via porta `8126` e os logs via Docker log collection (`DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL`).
+- O Dockerfile copia o tracer nativo (`Datadog.Trace.ClrProfiler.Native.so`) da imagem oficial `datadog/dd-lib-dotnet-init` para dentro da imagem da API.
+- Variáveis de ambiente no `docker-compose.yml` (`CORECLR_ENABLE_PROFILING`, `CORECLR_PROFILER`, `CORECLR_PROFILER_PATH`) ativam o profiler do .NET, que injeta o tracing automaticamente em ASP.NET Core, HttpClient, etc.
+- O Datadog Agent (`registry.datadoghq.com/agent:7`) recebe os traces via porta `8126` e os logs via Docker log collection (`DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL`).
+
+> Nota: o Datadog também oferece um método de **Docker APM Instrumentation** a nível de host (script `install_script_agent7.sh` com `DD_APM_INSTRUMENTATION_ENABLED=docker`), que auto-instrumenta qualquer container ao subir, sem tocar em Dockerfile. Não usamos aqui porque esse script só roda em Linux nativo — no Windows exigiria uma distro WSL completa (Ubuntu, por exemplo) só para isso.
 
 ## Anotações
 

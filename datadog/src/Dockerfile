@@ -6,12 +6,8 @@ RUN dotnet publish -c Release -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Instala o .NET Tracer do Datadog para auto-instrumentacao via CLR Profiler
-RUN apt-get update && apt-get install -y curl && \
-    curl -LO https://github.com/DataDog/dd-trace-dotnet/releases/latest/download/datadog-dotnet-apm_amd64.deb && \
-    dpkg -i ./datadog-dotnet-apm_amd64.deb && \
-    rm datadog-dotnet-apm_amd64.deb && \
-    apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+# Copia o .NET Tracer do Datadog da imagem oficial de instrumentacao
+COPY --from=datadog/dd-lib-dotnet-init:latest /datadog-init/monitoring-home /opt/datadog
 
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "ObservabilityDemo.Api.dll"]

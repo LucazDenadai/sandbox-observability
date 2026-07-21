@@ -4,3 +4,6 @@ obj/
 
 # Env files
 .env
+
+# VS Code local history extension
+.history/
